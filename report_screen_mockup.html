@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>운용보고서 화면 목업</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9fafb; color: #111827; font-size: 14px; }
+
+  /* ── 레이아웃 ── */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; background: #1e3a5f; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-logo .logo-title { font-size: 18px; font-weight: 800; color: white; letter-spacing: -0.5px; }
+  .sidebar-logo .logo-sub { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 2px; text-transform: uppercase; letter-spacing: 1px; }
+  .sidebar-nav { padding: 12px 8px; flex: 1; }
+  .nav-section-label { font-size: 10px; color: rgba(255,255,255,0.4); padding: 8px 12px 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: rgba(255,255,255,0.7); font-size: 13px; cursor: pointer; transition: background 0.15s; margin-bottom: 1px; }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+  .nav-item.active { background: rgba(255,255,255,0.15); color: white; font-weight: 600; }
+  .nav-icon { width: 16px; height: 16px; opacity: 0.7; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { height: 52px; background: white; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-between; padding: 0 24px; }
+  .topbar-title { font-size: 13px; color: #6b7280; }
+  .topbar-user { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #374151; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 700; }
+  .content { flex: 1; padding: 28px 32px; overflow-y: auto; }
+
+  /* ── 공통 카드 ── */
+  .card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
+  .section-header { padding: 10px 24px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+  .section-header h3 { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.8px; }
+  .section-body { padding: 24px; }
+
+  /* ── 탭 ── */
+  .page-title { font-size: 22px; font-weight: 800; color: #111827; margin-bottom: 20px; }
+  .tabs { border-bottom: 1px solid #e5e7eb; display: flex; gap: 4px; margin-bottom: 24px; }
+  .tab { padding: 10px 20px; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; color: #6b7280; cursor: pointer; }
+  .tab.active { border-bottom-color: #2563eb; color: #2563eb; }
+
+  /* ── 보고서 헤더 배너 ── */
+  .report-header { background: #1e40af; background: linear-gradient(135deg, #1e40af 0%, #2563eb 60%, #3b82f6 100%); color: white; border-radius: 12px; padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .report-header-left .label { font-size: 10px; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 1.5px; }
+  .report-header-left h2 { font-size: 20px; font-weight: 800; margin-top: 4px; }
+  .report-header-left .sub { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 5px; }
+  .report-header-right { display: flex; align-items: center; gap: 24px; }
+  .base-month .label2 { font-size: 10px; color: rgba(255,255,255,0.65); text-align: right; }
+  .base-month .value { font-size: 28px; font-weight: 800; text-align: right; }
+  .base-month .sub2 { font-size: 10px; color: rgba(255,255,255,0.65); text-align: right; margin-top: 2px; }
+  .pdf-btn { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; }
+
+  /* ── 펀드 기본정보 그리드 ── */
+  .info-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px 24px; }
+  .info-item dt { font-size: 11px; color: #9ca3af; margin-bottom: 3px; }
+  .info-item dd { font-size: 13px; font-weight: 700; color: #111827; }
+
+  /* ── 수익률 테이블 ── */
+  .returns-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  .returns-table th { text-align: right; padding-bottom: 8px; font-size: 11px; font-weight: 500; color: #9ca3af; border-bottom: 1px solid #e5e7eb; padding-right: 20px; white-space: nowrap; }
+  .returns-table td { text-align: right; padding-top: 10px; font-size: 16px; font-weight: 800; padding-right: 20px; }
+  .pos { color: #dc2626; }
+  .neg { color: #2563eb; }
+  .neutral { color: #6b7280; }
+
+  /* ── 차트 영역 ── */
+  .chart-area { background: #f8faff; border: 1px solid #e8eef8; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .chart-label { font-size: 11px; color: #9ca3af; margin-bottom: 12px; }
+  .chart-placeholder { height: 180px; position: relative; overflow: hidden; }
+  .chart-line { position: absolute; bottom: 0; left: 0; right: 0; }
+  .chart-grid-h { position: absolute; left: 0; right: 0; border-top: 1px dashed #e5e7eb; }
+  .chart-zero { position: absolute; left: 0; right: 0; border-top: 1px dashed #9ca3af; }
+  svg.chart-svg { width: 100%; height: 100%; }
+
+  /* ── 성과 요약 카드 ── */
+  .perf-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .perf-card { background: #f9fafb; border-radius: 10px; padding: 16px; text-align: center; }
+  .perf-card .pc-label { font-size: 11px; color: #9ca3af; margin-bottom: 6px; }
+  .perf-card .pc-value { font-size: 26px; font-weight: 800; }
+
+  /* ── 자산구성 ── */
+  .asset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .bar-row { margin-bottom: 12px; }
+  .bar-row-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+  .bar-row-label .name { color: #374151; }
+  .bar-row-label .pct { font-weight: 700; }
+  .bar-track { height: 8px; background: #f3f4f6; border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; }
+
+  /* ── 업종 바차트 ── */
+  .sector-chart { }
+  .sector-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .sector-name { width: 80px; font-size: 11px; color: #374151; text-align: right; flex-shrink: 0; }
+  .sector-bar-track { flex: 1; height: 18px; background: #f3f4f6; border-radius: 3px; overflow: hidden; position: relative; }
+  .sector-bar-fill { height: 100%; border-radius: 3px; }
+  .sector-pct { width: 36px; font-size: 11px; color: #6b7280; text-align: right; flex-shrink: 0; }
+
+  /* ── 보유종목 테이블 ── */
+  .holdings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .holdings-table thead tr { border-bottom: 1px solid #e5e7eb; }
+  .holdings-table th { padding-bottom: 8px; font-size: 11px; font-weight: 500; color: #9ca3af; }
+  .holdings-table th:first-child { text-align: left; }
+  .holdings-table th:not(:first-child) { text-align: right; }
+  .holdings-table tbody tr { border-bottom: 1px solid #f3f4f6; }
+  .holdings-table tbody tr:hover { background: #f9fafb; }
+  .holdings-table td { padding: 9px 0; }
+  .holdings-table td:first-child { text-align: left; }
+  .holdings-table td:not(:first-child) { text-align: right; }
+  .stock-code { font-family: monospace; color: #6b7280; font-size: 12px; padding-right: 12px !important; }
+  .stock-name { font-weight: 600; color: #111827; padding-right: 12px !important; }
+  .sector-tag { font-size: 11px; color: #9ca3af; padding-right: 12px !important; }
+
+  /* ── 운용역 코멘트 ── */
+  .comment-block { margin-bottom: 16px; }
+  .comment-block:last-child { margin-bottom: 0; }
+  .comment-section-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .comment-text { font-size: 13px; color: #374151; line-height: 1.7; background: #f9fafb; border-radius: 8px; padding: 12px; white-space: pre-wrap; }
+
+  /* ── 등록 폼 ── */
+  .form-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+  .form-title { font-size: 14px; font-weight: 700; color: #374151; margin-bottom: 16px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .form-field label { display: block; font-size: 12px; font-weight: 500; color: #4b5563; margin-bottom: 5px; }
+  .form-field select, .form-field input { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #111827; outline: none; }
+  .form-field select:focus, .form-field input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  .btn-primary { padding: 9px 20px; background: #2563eb; color: white; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; }
+  .btn-primary:hover { background: #1d4ed8; }
+
+  /* ── 등록 목록 테이블 ── */
+  .list-table { width: 100%; border-collapse: collapse; }
+  .list-table thead { background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+  .list-table th { padding: 10px 16px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; }
+  .list-table th.center { text-align: center; }
+  .list-table tbody tr { border-bottom: 1px solid #f3f4f6; cursor: pointer; }
+  .list-table tbody tr:hover { background: #eff6ff; }
+  .list-table td { padding: 12px 16px; }
+  .td-center { text-align: center; }
+  .filled-badge { font-size: 11px; font-weight: 600; }
+  .filled-5 { color: #16a34a; }
+  .filled-partial { color: #d97706; }
+  .filled-0 { color: #9ca3af; }
+  .action-link { font-size: 12px; font-weight: 500; color: #2563eb; background: none; border: none; cursor: pointer; }
+  .action-link:hover { text-decoration: underline; }
+  .del-link { font-size: 12px; color: #ef4444; background: none; border: none; cursor: pointer; }
+  .del-link:hover { text-decoration: underline; }
+
+  /* ── 모달 ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 50; }
+  .modal { background: white; border-radius: 16px; box-shadow: 0 25px 60px rgba(0,0,0,0.2); width: 780px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1px solid #e5e7eb; }
+  .modal-header h2 { font-size: 14px; font-weight: 800; }
+  .modal-header .sub { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+  .modal-close { font-size: 18px; color: #9ca3af; cursor: pointer; background: none; border: none; }
+  .modal-body { display: flex; flex: 1; overflow: hidden; }
+  .modal-nav { width: 160px; border-right: 1px solid #f3f4f6; background: #f9fafb; padding: 12px 0; flex-shrink: 0; }
+  .modal-nav-item { display: flex; align-items: center; gap: 8px; padding: 10px 16px; font-size: 13px; color: #4b5563; cursor: pointer; }
+  .modal-nav-item.active { background: #eff6ff; color: #1d4ed8; font-weight: 700; border-right: 2px solid #2563eb; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .dot-filled { background: #4ade80; }
+  .dot-empty { background: #d1d5db; }
+  .modal-editor { flex: 1; padding: 20px; display: flex; flex-direction: column; }
+  .modal-editor label { font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 8px; }
+  .modal-textarea { flex: 1; min-height: 300px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; font-size: 13px; color: #374151; resize: none; line-height: 1.6; outline: none; font-family: inherit; }
+  .modal-textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  .char-count { font-size: 11px; color: #9ca3af; text-align: right; margin-top: 6px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 24px; border-top: 1px solid #e5e7eb; }
+  .btn-ghost { padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; color: #4b5563; background: white; cursor: pointer; }
+  .btn-ghost:hover { background: #f9fafb; }
+
+  /* ── 뱃지 섹션 구분 ── */
+  .screen-label { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; margin-top: 40px; padding: 5px 10px; background: #fff3cd; border-left: 3px solid #f59e0b; display: inline-block; border-radius: 0 4px 4px 0; }
+  .screen-label:first-child { margin-top: 0; }
+
+  /* ── 공통 스페이싱 ── */
+  .mb-4 { margin-bottom: 16px; }
+  .mb-5 { margin-bottom: 20px; }
+  .mb-6 { margin-bottom: 24px; }
+  .space-y-5 > * + * { margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     화면 1: 펀드 개요 탭
+════════════════════════════════════════ -->
+<div class="screen-label" style="display:block;margin:0 0 0 0;border-radius:0;">화면 ① — 펀드 개요 탭 (등록 & 목록)</div>
+
+<div class="layout" style="min-height:auto;">
+  <!-- 사이드바 -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-title">BIGS</div>
+      <div class="logo-sub">Fund Management</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section-label">성과 분석</div>
+      <div class="nav-item">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        펀드 성과
+      </div>
+      <div class="nav-item">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        수익률 분석
+      </div>
+      <div class="nav-section-label" style="margin-top:12px;">보고서</div>
+      <div class="nav-item active">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        월별 성과보고서
+      </div>
+    </div>
+  </div>
+
+  <!-- 메인 콘텐츠 -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">보고서 &rsaquo; 월별 성과보고서</div>
+      <div class="topbar-user">
+        <div class="avatar">운</div>
+        운용역 홍길동
+      </div>
+    </div>
+    <div class="content">
+      <div class="page-title">펀드별 월별 성과보고서</div>
+
+      <!-- 탭 -->
+      <div class="tabs">
+        <div class="tab active">펀드 개요</div>
+        <div class="tab">보고서</div>
+      </div>
+
+      <!-- 등록 폼 카드 -->
+      <div class="form-card">
+        <div class="form-title">보고 펀드 등록</div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>펀드 선택</label>
+            <select>
+              <option>KRX001 BIGS 성장형 주식펀드</option>
+              <option>-- 펀드 선택 --</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>기준 연월</label>
+            <input type="month" value="2026-04">
+          </div>
+        </div>
+        <button class="btn-primary">+ 등록</button>
+      </div>
+
+      <!-- 등록된 펀드 목록 -->
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#374151;margin-bottom:10px;">
+          등록된 보고 펀드
+          <span style="font-size:13px;font-weight:400;color:#9ca3af;margin-left:8px;">(3건)</span>
+        </div>
+        <div class="card">
+          <table class="list-table">
+            <thead>
+              <tr>
+                <th>운용사코드</th>
+                <th>펀드코드</th>
+                <th>펀드명</th>
+                <th>기준 연월</th>
+                <th class="center">작성 현황</th>
+                <th class="center">내용 작성</th>
+                <th class="center">삭제</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr title="더블클릭하면 보고서 화면으로 이동합니다">
+                <td style="color:#6b7280;">BIG001</td>
+                <td style="font-family:monospace;color:#374151;">KRX001</td>
+                <td style="font-weight:600;">BIGS 성장형 주식펀드</td>
+                <td>2026-04</td>
+                <td class="td-center"><span class="filled-badge filled-5">5/5</span></td>
+                <td class="td-center"><button class="action-link">작성</button></td>
+                <td class="td-center"><button class="del-link">삭제</button></td>
+              </tr>
+              <tr>
+                <td style="color:#6b7280;">BIG001</td>
+                <td style="font-family:monospace;color:#374151;">KRX002</td>
+                <td style="font-weight:600;">BIGS 가치형 혼합펀드</td>
+                <td>2026-04</td>
+                <td class="td-center"><span class="filled-badge filled-partial">3/5</span></td>
+                <td class="td-center"><button class="action-link">작성</button></td>
+                <td class="td-center"><button class="del-link">삭제</button></td>
+              </tr>
+              <tr>
+                <td style="color:#6b7280;">BIG001</td>
+                <td style="font-family:monospace;color:#374151;">KRX003</td>
+                <td style="font-weight:600;">BIGS 배당형 주식펀드</td>
+                <td>2026-03</td>
+                <td class="td-center"><span class="filled-badge filled-0">0/5</span></td>
+                <td class="td-center"><button class="action-link">작성</button></td>
+                <td class="td-center"><button class="del-link">삭제</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     화면 2: 보고서 탭 (운용보고서 본문)
+════════════════════════════════════════ -->
+<div class="screen-label" style="display:block;">화면 ② — 보고서 탭 (운용보고서 본문)</div>
+
+<div class="layout" style="min-height:auto;">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-title">BIGS</div>
+      <div class="logo-sub">Fund Management</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section-label">성과 분석</div>
+      <div class="nav-item">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        펀드 성과
+      </div>
+      <div class="nav-section-label" style="margin-top:12px;">보고서</div>
+      <div class="nav-item active">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        월별 성과보고서
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">보고서 &rsaquo; 월별 성과보고서</div>
+      <div class="topbar-user">
+        <div class="avatar">운</div>
+        운용역 홍길동
+      </div>
+    </div>
+    <div class="content">
+      <div class="page-title">펀드별 월별 성과보고서</div>
+
+      <!-- 탭 -->
+      <div class="tabs">
+        <div class="tab">펀드 개요</div>
+        <div class="tab active">보고서</div>
+      </div>
+
+      <div class="space-y-5">
+
+        <!-- 보고서 헤더 배너 -->
+        <div class="report-header">
+          <div class="report-header-left">
+            <div class="label">Fund Management Report</div>
+            <h2>BIGS 성장형 주식펀드</h2>
+            <div class="sub">KRX001 &nbsp;·&nbsp; 주식형 &nbsp;·&nbsp; BM: 코스피200</div>
+          </div>
+          <div class="report-header-right">
+            <div class="base-month">
+              <div class="label2">기준 연월</div>
+              <div class="value">2026-04</div>
+              <div class="sub2">기준일: 2026-04-30</div>
+            </div>
+            <div class="pdf-btn">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+              PDF 저장
+            </div>
+          </div>
+        </div>
+
+        <!-- 1. 펀드 기본 정보 -->
+        <div class="card">
+          <div class="section-header"><h3>1. 펀드 기본 정보</h3></div>
+          <div class="section-body">
+            <dl class="info-grid">
+              <div class="info-item"><dt>펀드명</dt><dd>BIGS 성장형 주식펀드</dd></div>
+              <div class="info-item"><dt>펀드코드</dt><dd>KRX001</dd></div>
+              <div class="info-item"><dt>운용사</dt><dd>BIG001</dd></div>
+              <div class="info-item"><dt>운용역</dt><dd>홍길동</dd></div>
+              <div class="info-item"><dt>기준일</dt><dd>2026-04-30</dd></div>
+              <div class="info-item"><dt>설정일</dt><dd>2020-03-15</dd></div>
+              <div class="info-item"><dt>펀드 유형</dt><dd>주식형</dd></div>
+              <div class="info-item"><dt>벤치마크</dt><dd>코스피200</dd></div>
+              <div class="info-item"><dt>기준가(원)</dt><dd>1,248,630</dd></div>
+              <div class="info-item"><dt>순자산(원)</dt><dd>48,500,000,000</dd></div>
+            </dl>
+          </div>
+        </div>
+
+        <!-- 2. 수익률 및 성과 -->
+        <div class="card">
+          <div class="section-header"><h3>2. 수익률 및 성과</h3></div>
+          <div class="section-body">
+            <!-- 기간별 수익률 테이블 -->
+            <div style="overflow-x:auto;margin-bottom:20px;">
+              <table class="returns-table">
+                <thead>
+                  <tr>
+                    <th>1개월</th><th>3개월</th><th>6개월</th><th>1년</th><th>3년</th><th>설정 이후</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="pos">+2.34%</td>
+                    <td class="pos">+5.81%</td>
+                    <td class="neg">-1.20%</td>
+                    <td class="pos">+12.47%</td>
+                    <td class="pos">+38.92%</td>
+                    <td class="pos">+24.86%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- 누적수익률 차트 -->
+            <div class="chart-area">
+              <div class="chart-label">설정 이후 누적수익률 추이</div>
+              <div class="chart-placeholder">
+                <svg class="chart-svg" viewBox="0 0 800 180" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="grad1" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stop-color="#2563eb" stop-opacity="0.15"/>
+                      <stop offset="95%" stop-color="#2563eb" stop-opacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <!-- 그리드 라인 -->
+                  <line x1="0" y1="36" x2="800" y2="36" stroke="#f0f0f0" stroke-width="1"/>
+                  <line x1="0" y1="72" x2="800" y2="72" stroke="#f0f0f0" stroke-width="1"/>
+                  <line x1="0" y1="108" x2="800" y2="108" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4,4"/>
+                  <line x1="0" y1="144" x2="800" y2="144" stroke="#f0f0f0" stroke-width="1"/>
+                  <!-- Y축 레이블 -->
+                  <text x="4" y="32" font-size="10" fill="#9ca3af">+30%</text>
+                  <text x="4" y="68" font-size="10" fill="#9ca3af">+15%</text>
+                  <text x="4" y="112" font-size="10" fill="#9ca3af">0%</text>
+                  <text x="4" y="148" font-size="10" fill="#9ca3af">-10%</text>
+                  <!-- 차트 영역 (fill) -->
+                  <path d="M50,148 C100,130 150,155 200,145 C250,135 280,120 320,100 C360,80 380,95 420,82 C460,68 500,58 540,50 C580,42 620,55 660,48 C700,40 740,30 780,34 L780,170 L50,170 Z" fill="url(#grad1)"/>
+                  <!-- 차트 라인 -->
+                  <path d="M50,148 C100,130 150,155 200,145 C250,135 280,120 320,100 C360,80 380,95 420,82 C460,68 500,58 540,50 C580,42 620,55 660,48 C700,40 740,30 780,34" fill="none" stroke="#2563eb" stroke-width="2"/>
+                  <!-- X축 레이블 -->
+                  <text x="50" y="176" font-size="9" fill="#9ca3af" text-anchor="middle">2020-03</text>
+                  <text x="200" y="176" font-size="9" fill="#9ca3af" text-anchor="middle">2021-06</text>
+                  <text x="360" y="176" font-size="9" fill="#9ca3af" text-anchor="middle">2022-09</text>
+                  <text x="540" y="176" font-size="9" fill="#9ca3af" text-anchor="middle">2024-01</text>
+                  <text x="780" y="176" font-size="9" fill="#9ca3af" text-anchor="middle">2026-04</text>
+                </svg>
+              </div>
+            </div>
+
+            <!-- 성과 요약 카드 2개 -->
+            <div class="perf-summary">
+              <div class="perf-card">
+                <div class="pc-label">설정 이후 누적수익률</div>
+                <div class="pc-value pos">▲ 24.86%</div>
+              </div>
+              <div class="perf-card">
+                <div class="pc-label">기준가</div>
+                <div class="pc-value" style="color:#111827;">1,248,630원</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 자산 구성 현황 -->
+        <div class="card">
+          <div class="section-header"><h3>3. 자산 구성 현황</h3></div>
+          <div class="section-body">
+            <div class="asset-grid">
+              <!-- 자산 유형별 -->
+              <div>
+                <div style="font-size:11px;color:#9ca3af;margin-bottom:12px;">자산 유형별 비중</div>
+                <div class="bar-row">
+                  <div class="bar-row-label"><span class="name">주식</span><span class="pct">78.4%</span></div>
+                  <div class="bar-track"><div class="bar-fill" style="width:78.4%;background:#2563eb;"></div></div>
+                </div>
+                <div class="bar-row" style="margin-top:10px;">
+                  <div class="bar-row-label"><span class="name">현금·기타</span><span class="pct">21.6%</span></div>
+                  <div class="bar-track"><div class="bar-fill" style="width:21.6%;background:#16a34a;"></div></div>
+                </div>
+              </div>
+
+              <!-- 업종별 비중 -->
+              <div>
+                <div style="font-size:11px;color:#9ca3af;margin-bottom:10px;">업종별 비중</div>
+                <div class="sector-chart">
+                  <div class="sector-row"><div class="sector-name">반도체</div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:82%;background:#2563eb;"></div></div><div class="sector-pct">28.4%</div></div>
+                  <div class="sector-row"><div class="sector-name">IT서비스</div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:58%;background:#16a34a;"></div></div><div class="sector-pct">20.1%</div></div>
+                  <div class="sector-row"><div class="sector-name">자동차</div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:43%;background:#dc2626;"></div></div><div class="sector-pct">14.9%</div></div>
+                  <div class="sector-row"><div class="sector-name">바이오</div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:31%;background:#9333ea;"></div></div><div class="sector-pct">10.8%</div></div>
+                  <div class="sector-row"><div class="sector-name">금융</div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:12%;background:#ea580c;"></div></div><div class="sector-pct">4.2%</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. 보유 종목 현황 -->
+        <div class="card">
+          <div class="section-header"><h3>4. 보유 종목 현황 (TOP 10)</h3></div>
+          <div class="section-body" style="padding:0;">
+            <div style="overflow-x:auto;">
+              <table class="holdings-table" style="padding:0 24px;">
+                <thead>
+                  <tr style="border-bottom:1px solid #e5e7eb;">
+                    <th style="text-align:left;padding:12px 16px;font-size:11px;font-weight:500;color:#9ca3af;">종목코드</th>
+                    <th style="text-align:left;padding:12px 8px;font-size:11px;font-weight:500;color:#9ca3af;">종목명</th>
+                    <th style="text-align:left;padding:12px 8px;font-size:11px;font-weight:500;color:#9ca3af;">업종</th>
+                    <th style="text-align:right;padding:12px 16px;font-size:11px;font-weight:500;color:#9ca3af;">보유수량</th>
+                    <th style="text-align:right;padding:12px 16px;font-size:11px;font-weight:500;color:#9ca3af;">평가금액</th>
+                    <th style="text-align:right;padding:12px 16px;font-size:11px;font-weight:500;color:#9ca3af;">편입비중</th>
+                    <th style="text-align:right;padding:12px 16px;font-size:11px;font-weight:500;color:#9ca3af;">수익률</th>
+                    <th style="text-align:right;padding:12px 16px;font-size:11px;font-weight:500;color:#9ca3af;">기여도</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid #f3f4f6;">
+                    <td style="padding:9px 16px;font-family:monospace;font-size:12px;color:#6b7280;">005930</td>
+                    <td style="padding:9px 8px;font-weight:600;color:#111827;">삼성전자</td>
+                    <td style="padding:9px 8px;font-size:11px;color:#9ca3af;">반도체</td>
+                    <td style="padding:9px 16px;text-align:right;color:#374151;">15,200</td>
+                    <td style="padding:9px 16px;text-align:right;color:#374151;">10,648,000,000</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:700;">21.9%</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:600;color:#dc2626;">+8.43%</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:600;color:#dc2626;">+1.85%</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #f3f4f6;">
+                    <td style="padding:9px 16px;font-family:monospace;font-size:12px;color:#6b7280;">000660</td>
+                    <td style="padding:9px 8px;font-weight:600;color:#111827;">SK하이닉스</td>
+                    <td style="padding:9px 8px;font-size:11px;color:#9ca3af;">반도체</td>
+                    <td style="padding:9px 16px;text-align:right;color:#374151;">8,400</td>
+                    <td style="padding:9px 16px;text-align:right;color:#374151;">7,224,000,000</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:700;">14.9%</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:600;color:#dc2626;">+12.20%</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:600;color:#dc2626;">+1.82%</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #f3f4f6;">
+                    <td style="padding:9px 16px;font-family:monospace;font-size:12px;color:#6b7280;">035720</td>
+                    <td style="padding:9px 8px;font-weight:600;color:#111827;">카카오</td>
+                    <td style="padding:9px 8px;font-size:11px;color:#9ca3af;">IT서비스</td>
+                    <td style="padding:9px 16px;text-align:right;color:#374151;">42,000</td>
+                    <td style="padding:9px 16px;text-align:right;color:#374151;">4,326,000,000</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:700;">8.9%</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:600;color:#2563eb;">-3.14%</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:600;color:#2563eb;">-0.28%</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #f3f4f6;">
+                    <td style="padding:9px 16px;font-family:monospace;font-size:12px;color:#6b7280;">005380</td>
+                    <td style="padding:9px 8px;font-weight:600;color:#111827;">현대차</td>
+                    <td style="padding:9px 8px;font-size:11px;color:#9ca3af;">자동차</td>
+                    <td style="padding:9px 16px;text-align:right;color:#374151;">6,100</td>
+                    <td style="padding:9px 16px;text-align:right;color:#374151;">3,843,000,000</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:700;">7.9%</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:600;color:#dc2626;">+5.70%</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:600;color:#dc2626;">+0.45%</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:9px 16px;font-family:monospace;font-size:12px;color:#6b7280;">207940</td>
+                    <td style="padding:9px 8px;font-weight:600;color:#111827;">삼성바이오로직스</td>
+                    <td style="padding:9px 8px;font-size:11px;color:#9ca3af;">바이오</td>
+                    <td style="padding:9px 16px;text-align:right;color:#374151;">1,850</td>
+                    <td style="padding:9px 16px;text-align:right;color:#374151;">3,052,500,000</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:700;">6.3%</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:600;color:#dc2626;">+18.90%</td>
+                    <td style="padding:9px 16px;text-align:right;font-weight:600;color:#dc2626;">+1.19%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. 운용역 코멘트 -->
+        <div class="card">
+          <div class="section-header"><h3>5. 운용역 코멘트</h3></div>
+          <div class="section-body">
+            <div class="comment-block">
+              <div class="comment-section-label">펀드</div>
+              <div class="comment-text">BIGS 성장형 주식펀드는 국내 성장주 중심으로 운용되는 주식형 펀드로, 중·장기적 관점에서 기업 이익 성장이 기대되는 종목에 집중 투자합니다. 설정 이후 코스피 대비 초과 성과를 유지하고 있으며, 반도체 및 바이오 섹터 비중 확대가 주요 알파 요인으로 작용했습니다.</div>
+            </div>
+            <div class="comment-block">
+              <div class="comment-section-label">운용역 코멘트</div>
+              <div class="comment-text">4월 중 AI 반도체 사이클의 재가속화 신호가 포착되면서 삼성전자와 SK하이닉스 중심의 편입 비중을 소폭 확대했습니다. 단기적으로는 미국 금리 경로 불확실성이 변동성을 높일 수 있으나, 하반기 실적 개선 모멘텀을 고려할 때 현 포트폴리오 방향성을 유지할 예정입니다.</div>
+            </div>
+            <div class="comment-block">
+              <div class="comment-section-label">시장분석</div>
+              <div class="comment-text">4월 코스피는 외국인 순매수 전환과 반도체 업황 회복 기대감에 힘입어 전월 대비 +3.2% 상승했습니다. 원/달러 환율은 1,350원 내외에서 안정화되었으며, 국내 기업들의 1분기 실적 서프라이즈가 이어지면서 증시에 긍정적 영향을 미쳤습니다.</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /space-y-5 -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     화면 3: 내용 작성 모달
+════════════════════════════════════════ -->
+<div class="screen-label" style="display:block;">화면 ③ — 내용 작성 모달 (운용역 코멘트 편집)</div>
+
+<div style="background:#f3f4f6;padding:40px;display:flex;justify-content:center;align-items:flex-start;">
+  <div class="modal" style="position:relative;">
+    <div class="modal-header">
+      <div>
+        <h2>KRX001 · BIGS 성장형 주식펀드</h2>
+        <div class="sub">기준 연월: 2026-04 &nbsp;·&nbsp; 3/5 항목 작성됨</div>
+      </div>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <nav class="modal-nav">
+        <div class="modal-nav-item active">
+          <div class="dot dot-filled"></div> 펀드
+        </div>
+        <div class="modal-nav-item">
+          <div class="dot dot-empty"></div> 보유종목
+        </div>
+        <div class="modal-nav-item">
+          <div class="dot dot-filled"></div> 성과지표
+        </div>
+        <div class="modal-nav-item">
+          <div class="dot dot-filled"></div> 운용역 코멘트
+        </div>
+        <div class="modal-nav-item">
+          <div class="dot dot-empty"></div> 시장분석
+        </div>
+      </nav>
+      <div class="modal-editor">
+        <label>펀드</label>
+        <textarea class="modal-textarea">BIGS 성장형 주식펀드는 국내 성장주 중심으로 운용되는 주식형 펀드로, 중·장기적 관점에서 기업 이익 성장이 기대되는 종목에 집중 투자합니다. 설정 이후 코스피 대비 초과 성과를 유지하고 있으며, 반도체 및 바이오 섹터 비중 확대가 주요 알파 요인으로 작용했습니다.</textarea>
+        <div class="char-count">129자</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost">취소</button>
+      <button class="btn-primary">저장</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
