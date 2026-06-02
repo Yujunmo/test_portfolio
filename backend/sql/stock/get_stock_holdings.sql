@@ -54,7 +54,7 @@ SELECT
     ROUND(
         CAST((t.holding_qty * t.close_price) - (t.holding_qty * t.avg_buy_price) AS REAL)
         / (t.holding_qty * t.avg_buy_price) * 100
-    , 2)                                                                       AS return_pct,
+    , 5)                                                                       AS return_pct,
 
     -- 전일대비 = 현재가 − 전일 종가
     t.close_price - pc.prev_close_price                                        AS vs_prev_day,
