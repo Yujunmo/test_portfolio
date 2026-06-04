@@ -163,7 +163,7 @@ export default function FundPerformance() {
         <button
           onClick={handleSearch}
           disabled={loading}
-          className="px-6 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
+          className="px-6 py-2.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors"
         >
           {loading ? "조회 중..." : "조회"}
         </button>
