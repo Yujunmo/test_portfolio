@@ -42,7 +42,7 @@ yarn-error.log*
 *.db
 *.sqlite
 *.sqlite3
-backend/data/*.db
+!bigs_p.db
 
 # ===== Jupyter =====
 .ipynb_checkpoints/
@@ -61,3 +61,7 @@ Thumbs.db
 
 # ===== Claude =====
 .claude/
+
+# ===== Backup =====
+*.bak
+*.bak.*
