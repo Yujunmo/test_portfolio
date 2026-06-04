@@ -32,7 +32,7 @@ SELECT
             (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= :end_date                ORDER BY date LIMIT 1)
           / (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= date(:end_date, '-7 days') ORDER BY date LIMIT 1)
           - 1
-        ) * 100, 3
+        ) * 100, 2
     ) AS return_1w,
 
     -- 1개월
