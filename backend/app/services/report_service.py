@@ -61,7 +61,7 @@ def get_monthly_report(
     nav_series = [
         NavSeriesPoint(
             date=r["date"],
-            cumulative_return=round((r["adj_nav"] / base_nav - 1) * 100, 2),
+            cumulative_return=round((r["adj_nav"] / base_nav - 1) * 100, 3),
         )
         for r in nav_rows
     ]
