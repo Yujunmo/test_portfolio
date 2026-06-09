@@ -12,7 +12,7 @@ SELECT
             (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= :end_date   ORDER BY date LIMIT 1)
           / (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= :start_date ORDER BY date LIMIT 1)
           - 1
-        ) * 100, 2
+        ) * 100, 1
     ) AS return_period,
 
     -- 1일
@@ -22,7 +22,7 @@ SELECT
             (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= :end_date               ORDER BY date LIMIT 1)
           / (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= date(:end_date, '-1 day') ORDER BY date LIMIT 1)
           - 1
-        ) * 100, 2
+        ) * 100, 1
     ) AS return_1d,
 
     -- 1주
@@ -32,7 +32,7 @@ SELECT
             (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= :end_date                ORDER BY date LIMIT 1)
           / (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= date(:end_date, '-7 days') ORDER BY date LIMIT 1)
           - 1
-        ) * 100, 2
+        ) * 100, 1
     ) AS return_1w,
 
     -- 1개월
@@ -42,7 +42,7 @@ SELECT
             (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= :end_date                 ORDER BY date LIMIT 1)
           / (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= date(:end_date, '-1 month') ORDER BY date LIMIT 1)
           - 1
-        ) * 100, 2
+        ) * 100, 1
     ) AS return_1m,
 
     -- 3개월
@@ -52,7 +52,7 @@ SELECT
             (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= :end_date                  ORDER BY date LIMIT 1)
           / (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= date(:end_date, '-3 months') ORDER BY date LIMIT 1)
           - 1
-        ) * 100, 2
+        ) * 100, 1
     ) AS return_3m,
 
     -- 6개월
@@ -62,7 +62,7 @@ SELECT
             (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= :end_date                  ORDER BY date LIMIT 1)
           / (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= date(:end_date, '-6 months') ORDER BY date LIMIT 1)
           - 1
-        ) * 100, 2
+        ) * 100, 1
     ) AS return_6m,
 
     -- 1년
@@ -72,7 +72,7 @@ SELECT
             (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= :end_date                ORDER BY date LIMIT 1)
           / (SELECT adj_nav FROM fund_nav WHERE fund_code = fl.fund_code AND date >= date(:end_date, '-1 year') ORDER BY date LIMIT 1)
           - 1
-        ) * 100, 2
+        ) * 100, 1
     ) AS return_1y
 
 FROM (
